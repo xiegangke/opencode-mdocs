@@ -1,3 +1,5 @@
 # Wiki
 
-No entries yet.
+## Categories
+
+- [reviews](reviews/INDEX.md)
