@@ -9,6 +9,7 @@ import { SubagentAssembler } from './subagent';
 import { MdocsLinter } from './linter';
 import { SearchEngine } from './search';
 import { AuditLog } from './audit';
+import { RoutingManager } from './routing';
 
 function loadAgentPrompt(agentPath: string) {
   const content = fs.readFileSync(agentPath, 'utf8');
@@ -35,6 +36,7 @@ export function createPlugin(baseDir: string, options: MdocsPluginOptions = {}) 
     const assembler = new SubagentAssembler();
     const search = new SearchEngine(mdocsRoot);
     const audit = new AuditLog(mdocsRoot);
+    const routing = new RoutingManager(baseDir);
 
     const today = () => new Date().toISOString().split('T')[0];
     const supportedMdocsCommands = [
@@ -75,10 +77,12 @@ export function createPlugin(baseDir: string, options: MdocsPluginOptions = {}) 
       const fileErrors = fileResults.flatMap(r => r.issues.filter(i => i.severity === 'error').map(i => `${r.file}: ${i.message}`));
       const graphErrors = graphResults.flatMap(r => r.issues.filter(i => i.severity === 'error').map(i => `${r.file}: ${i.message}`));
       const graphWarnings = graphResults.flatMap(r => r.issues.filter(i => i.severity !== 'error').map(i => `${r.file}: ${i.message}`));
+      const routingStatus = routing.status();
       return {
         initiatives: initiativeValidation,
         wiki: wikiValidation,
         graph: { valid: graphErrors.length === 0, errors: graphErrors, warnings: graphWarnings, results: graphResults },
+        routing: routingStatus,
         valid: initiativeValidation.valid && wikiValidation.valid && graphErrors.length === 0
       };
     };
@@ -123,6 +127,16 @@ export function createPlugin(baseDir: string, options: MdocsPluginOptions = {}) 
       } catch (e) {
         // Graceful degradation: don't fail if config mutation fails
         console.error('[mdocs] Config registration skipped:', e);
+      }
+
+      try {
+        routing.activate(cfg);
+      } catch {
+        // RoutingManager records activation failures in its diagnostics.
+      }
+      const routingState = routing.status();
+      if (routingState.errors.length > 0) {
+        console.error('[mdocs] Routing configuration rejected:', routingState.errors.join('; '));
       }
 
       if (!mdocs.exists()) {
@@ -513,6 +527,7 @@ export function createPlugin(baseDir: string, options: MdocsPluginOptions = {}) 
               })),
               lastActivity,
               resume,
+              routing: routing.status(),
               validation: validationResult()
             };
           } catch (err: any) {
@@ -617,7 +632,7 @@ export function createPlugin(baseDir: string, options: MdocsPluginOptions = {}) 
         args: {
           initiativeId: z.string().optional().describe('Initiative id to assemble context for; defaults to active initiative')
         },
-        execute: async (args: { initiativeId?: string }) => {
+        execute: async (args: { initiativeId?: string } = {}) => {
           const initiativeId = args.initiativeId || workflow.status().activeInitiative;
           if (!initiativeId) {
             return { error: 'No initiativeId provided and no active initiative' };
@@ -655,6 +670,15 @@ export function createPlugin(baseDir: string, options: MdocsPluginOptions = {}) 
             step: currentStep,
             relatedWikiCount: wikiEntries.length
           };
+        }
+      },
+      mdocs_route: {
+        description: "Resolve the first deterministic complexity route candidate or report default-host fallback",
+        args: {
+          classification: z.any().optional().describe('Raw classifier output; RoutingManager applies defaultLevel when it is invalid')
+        },
+        execute: async (args: { classification?: unknown }) => {
+          return routing.resolve(args?.classification);
         }
       },
       mdocs_audit: {

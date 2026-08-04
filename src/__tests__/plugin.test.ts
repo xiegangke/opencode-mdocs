@@ -87,6 +87,7 @@ Wiki content for testing`
     expect(result.context).toContain('Wiki content for testing');
     expect(result.context).toContain('Step 1');
     expect(result.context).toContain('Step 2');
+    expect(result.routing).toBeUndefined();
   });
 
   test('mdocs_dispatch returns error for missing initiative', async () => {
@@ -1054,6 +1055,7 @@ describe('Config Hook', () => {
       'mdocs_init',
       'mdocs_lookup',
       'mdocs_resume',
+      'mdocs_route',
       'mdocs_search',
       'mdocs_status',
       'mdocs_validate'
@@ -1074,6 +1076,9 @@ describe('Config Hook', () => {
     }
     expect(plugin.tool.mdocs.args.command).toBeDefined();
     expect(plugin.tool.mdocs_dispatch.args.initiativeId).toBeDefined();
+    expect(plugin.tool.mdocs_route.args.classification).toBeDefined();
+    expect(plugin.tool.mdocs_route.args.override).toBeUndefined();
+    expect(plugin.tool.mdocs_route.args.attemptIndex).toBeUndefined();
     expect(plugin.tool.mdocs_resume.args.initiativeId).toBeDefined();
   });
 

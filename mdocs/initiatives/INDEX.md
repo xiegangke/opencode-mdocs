@@ -41,3 +41,4 @@
 - **Add Full-Text Search Across Initiatives and Wiki** (done) — add-full-text-search--2026-05-27.md — 2026-05-27 — [enhancement, search, discovery]
 - **Fix opencode Runtime Custom Tool Registration** (done) — fix-opencode-runtime-tool-registration--2026-06-03.md — 2026-06-03 — [bug, opencode, plugin, custom-tools, runtime]
 - **Prepare v1.1.0 Release** (done) — prepare-v1-1-0-release--2026-05-31.md — 2026-05-31 — [release, v1.1.0]
+- **实施复杂度感知 LLM 路由** (active) — implement-complexity-aware-llm-routing--2026-08-04.md — 2026-08-04 — [implementation, llm-routing, opencode, subagent]
