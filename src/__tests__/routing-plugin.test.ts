@@ -97,13 +97,26 @@ describe('routing plugin integration', () => {
     expect(Object.keys(plugin.tool.mdocs_route.args)).toEqual(['classification']);
   });
 
-  test('passes invalid classification values to the resolver defaultLevel parser', async () => {
+  test('accepts only the classification tool contract and uses defaultLevel when omitted', async () => {
     writeRouting(routingConfig);
     const plugin = createPlugin(testDir) as any;
     plugin.config({ agent: { 'project-backup': { mode: 'subagent', model: 'provider/backup' } } });
 
-    expect(plugin.tool.mdocs_route.args.classification.safeParse({ level: 'invalid' }).success).toBe(true);
-    const route = await plugin.tool.mdocs_route.execute({ classification: { level: 'invalid' } });
+    const classification = plugin.tool.mdocs_route.args.classification;
+    expect(classification.safeParse({ level: 'simple', reasons: ['localized'] }).success).toBe(true);
+    expect(classification.safeParse({ level: 'invalid', reasons: [] }).success).toBe(false);
+    expect(classification.safeParse({ level: 'simple' }).success).toBe(false);
+    expect(classification.safeParse({ level: 'simple', reasons: [1] }).success).toBe(false);
+    expect(classification.safeParse({ level: 'simple', reasons: [], confidence: 0.9 }).success).toBe(false);
+    expect(classification.safeParse({ level: 'simple', reasons: [], agent: 'project-agent' }).success).toBe(false);
+    expect(classification.safeParse({ level: 'simple', reasons: [], model: 'provider/model' }).success).toBe(false);
+    expect(classification.safeParse({ level: 'simple', reasons: [], variant: 'high' }).success).toBe(false);
+    expect(classification.safeParse({ level: 'simple', reasons: [], binding: 'backup' }).success).toBe(false);
+    expect(classification.safeParse('simple').success).toBe(false);
+    expect(classification.safeParse([]).success).toBe(false);
+    expect(classification.safeParse(null).success).toBe(false);
+
+    const route = await plugin.tool.mdocs_route.execute({});
 
     expect(route.decision).toMatchObject({ classifiedLevel: 'standard', selectedBinding: 'medium' });
     expect(route.diagnostics.join('\n')).toContain('defaultLevel was used');

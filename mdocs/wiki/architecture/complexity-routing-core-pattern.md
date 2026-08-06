@@ -39,7 +39,7 @@ interface ClassificationResult {
 }
 ```
 
-分类器不得选择或推荐 `model`、`variant`、`agent` 或 `binding`。具体执行目标只能由结构化覆盖和 `mdocs/routing.json` 决定。
+分类器不得选择或推荐 `model`、`variant`、`agent` 或 `binding`。模型工具层严格只接受 `level` 和 `reasons`，拒绝额外或错误字段；resolver 的直接入口保留防御性容错。具体执行目标只能由结构化覆盖和 `mdocs/routing.json` 决定。
 
 ## 用户配置入口
 
@@ -128,7 +128,7 @@ agent target：
 
 ## `defaultLevel`
 
-`defaultLevel` 只处理以下分类失败：
+模型工具仅在 classification 整体缺失或分类过程异常时使用 `defaultLevel`；resolver 的直接防御入口也处理以下无法解析的分类值：
 
 - 分类输出无法解析；
 - 缺少 `level` 或其他必需字段；
@@ -177,7 +177,7 @@ TUI input + trusted context
 -> binding override: resolve one binding
 -> level override: obtain that level's ordered array
 -> otherwise classify level/reasons
--> validate classification or use defaultLevel
+-> 模型工具仅在分类整体缺失时使用 defaultLevel；resolver 防御入口容错
 -> obtain ordered binding array
 -> attempt index 0
 -> on safe pre-execution infrastructure failure, attempt index + 1
@@ -215,7 +215,7 @@ OpenCode 加载项目
 - model target 与 agent target 互斥。
 - model target 由 Mdocs 生成静态 Agent；agent target 引用已有静态 Agent。
 - 显式覆盖必须来自 TUI 结构化字段。
-- `defaultLevel` 只用于分类非法、缺字段、无法解析或异常，使用后直接查询对应数组。
+- 模型工具仅在 classification 整体缺失或分类异常时使用 `defaultLevel`；resolver 直接入口对非法、缺字段或无法解析值保持防御性容错，使用后直接查询对应数组。
 - `mdocs_dispatch` 的职责和接口保持不变，不返回路由状态或 resolver 信息。
 - 无配置或配置无效时不生成路由 Agent；执行回到宿主默认模型和原有 Task 行为。
 - 路由文件不保存 provider 凭据。

@@ -50,7 +50,7 @@ interface ClassificationResult {
 }
 ```
 
-分类器不得选择或推荐 `agent`、`model`、`variant` 或 `binding`。额外路由字段必须被忽略并记录协议违规；具体执行目标只能由确定性程序根据结构化覆盖和用户配置解析。
+分类器不得选择或推荐 `agent`、`model`、`variant` 或 `binding`。模型工具层严格只接受 `level` 和 `reasons`，额外或错误字段会被拒绝；resolver 的直接防御入口仍会忽略额外字段并记录协议违规。具体执行目标只能由确定性程序根据结构化覆盖和用户配置解析。
 
 ### 唯一配置入口
 
@@ -134,7 +134,7 @@ interface ClassificationResult {
 
 ## `defaultLevel`
 
-`defaultLevel` 只在以下分类失败时使用：
+`defaultLevel` 只在分类整体缺失或分类过程异常时由模型工具使用；resolver 的直接防御入口也会在收到无法解析、缺少必需字段或非法等级的值时使用：
 
 - 分类输出无法解析；
 - 缺少 `level` 或其他必需字段；
@@ -190,7 +190,7 @@ TUI input + trusted context
 -> binding override: resolve one binding
 -> level override: obtain that level's ordered array
 -> otherwise classify level/reasons
--> validate classification or use defaultLevel
+-> 模型工具仅在分类整体缺失时使用 defaultLevel；resolver 防御入口容错
 -> obtain ordered binding array
 -> attempt index 0
 -> on safe pre-execution infrastructure failure, attempt index + 1
@@ -256,7 +256,7 @@ interface RouteDecision {
 6. 已执行工具、产生副作用或无法确认副作用时不尝试下一项。
 7. 不评分、不随机、不轮询、不按成本或历史重排。
 8. 未知或重复 binding、binding 中的 `fallback` 均使整份配置失败。
-9. 分类非法、缺字段、无法解析或异常时使用 `defaultLevel` 并直接查询对应数组。
+9. 模型工具在分类整体缺失或分类异常时使用 `defaultLevel`；resolver 直接入口对非法、缺字段或无法解析值保持防御性容错。
 10. model target 自动生成 `mdocs-route-<binding>`；agent target 与 model target 互斥。
 11. binding override 只使用指定 binding。
 12. 无配置或配置无效时不伪造 Agent，保持宿主默认模型和原有 Task 行为。

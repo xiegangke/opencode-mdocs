@@ -673,9 +673,12 @@ export function createPlugin(baseDir: string, options: MdocsPluginOptions = {}) 
         }
       },
       mdocs_route: {
-        description: "Resolve the first deterministic complexity route candidate or report default-host fallback",
+        description: "Resolve the first deterministic complexity route candidate. Omit classification only when classification failed; RoutingManager then uses configured defaultLevel.",
         args: {
-          classification: z.any().optional().describe('Raw classifier output; RoutingManager applies defaultLevel when it is invalid')
+          classification: z.object({
+            level: z.enum(['simple', 'standard', 'complex']),
+            reasons: z.array(z.string())
+          }).strict().optional().describe('Classification result: { level: simple|standard|complex, reasons: string[] }. Omit only when classification failed.')
         },
         execute: async (args: { classification?: unknown }) => {
           return routing.resolve(args?.classification);

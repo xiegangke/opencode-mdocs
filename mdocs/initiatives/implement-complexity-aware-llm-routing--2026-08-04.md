@@ -1,14 +1,14 @@
 ---
 id: "implement-complexity-aware-llm-routing"
 title: "实施复杂度感知 LLM 路由"
-status: "active"
+status: "done"
 created: "2026-08-04"
-updated: "2026-08-05"
+updated: "2026-08-06"
 owner: "mdocs-orchestrator"
 tags: ["implementation","llm-routing","opencode","subagent"]
 related_wiki: ["decisions/user-maintained-complexity-llm-routing","architecture/complexity-routing-core-pattern"]
 priority: "medium"
-phase: "implementation"
+phase: "done"
 handoff_summary: "已完成三项已确认的最小修复：orchestrator 明确 resolved 与 default-host fallback 执行分支；mdocs_dispatch 恢复原成功返回契约且不含 routing/resolverTool；mdocs_route 接收原始 classification 并统一交由 RoutingManager defaultLevel parser 处理。两份路由 Wiki 和相关测试断言已同步，skills/mdocs-workflow/SKILL.md 保持不变。"
 next_action: "等待用户允许后运行路由专项测试、完整测试和构建。"
 ---
@@ -56,6 +56,12 @@ next_action: "等待用户允许后运行路由专项测试、完整测试和构
 - [2026-08-04T11:15:02.933Z] Marked done via mdocs command
 - 用户要求 binding 名称支持大写英文字母。当前 mdocs/routing.json 是用户未跟踪文件，将保持不修改。最小改动范围：更新正则以允许大小写首字母及后续大小写字母，仍不支持点号、下划线、空格或斜杠；同步 parser 测试和 Wiki 格式约束。
 - 完成启动性能只读分析：路由自身仅同步读取/JSON解析/Zod校验/稳定序列化/SHA-256，预计毫秒级且无模型网络请求；主要潜在开销是 config hook 为 bindings 中全部 13 个 model target 生成静态 Agent，宿主随后处理 13 个带 model 的 Agent。当前 levels 实际引用 11 个，DeepSeek-V4-Flash、GPT-5-5、GPT-5-6-Luna、MiniMax-M2 等部分 binding 未被等级数组使用。建议先做启动阶段分段计时和 Agent 数量 A/B，再考虑只生成被 levels/可信 override 引用的 Agent或按相同 model/variant 合并；缓存解析和延迟非路由管理器属于次级优化。未修改代码。
+- 审查 mdocs_route 无效输入问题：根因是 agents/mdocs-orchestrator.md 只写 `mdocs_route({ classification })`，未明确 classification 的对象结构；src/plugin.ts 又将工具参数声明为 z.any().optional()，模型看不到 level/reasons 枚举与类型约束，错误结构会被 RoutingManager 静默按 defaultLevel 处理。建议采用“工具层严格、resolver 层容错”：mdocs_route schema 严格接受 `{ level: simple|standard|complex, reasons: string[] }`，classification 仅在分类异常时整体省略；RoutingManager.resolve 继续为内部/直接调用保留 defaultLevel 防御性处理；同步精简 Agent 调用示例、测试和 Wiki。
+- 用户确认实施 mdocs_route 输入契约修复。执行范围：工具层使用严格 `{ level: simple|standard|complex, reasons: string[] }` schema，额外/错误字段由工具校验拒绝；classification 仅在分类过程失败时整体省略并使用 defaultLevel；RoutingManager.resolve 保留防御性容错；同步精简 orchestrator 调用格式、相关测试与两份 Wiki。保持 skills/mdocs-workflow/SKILL.md 和本地未跟踪 mdocs/routing.json 不变。
+- 已完成 mdocs_route 输入契约修复：工具 schema 严格要求 classification={level: simple|standard|complex, reasons: string[]} 并拒绝额外字段；classification 整体省略仅表示分类失败并使用 defaultLevel；RoutingManager.resolve 的直接入口继续保留防御性容错。orchestrator 保持精简并明确当前 TUI 输入/可信上下文、合法调用格式和禁止字段。routing-plugin 测试新增合法结构与非法 level、缺 reasons、错误 reasons、agent/model/variant/binding/confidence、字符串/数组/null 的 schema 断言；两份 Wiki 已区分严格工具层和容错 resolver 层。skills/mdocs-workflow/SKILL.md 与未跟踪 mdocs/routing.json 均未修改。git diff --check、mdocs_validate 和 INDEX consistency 通过；尚未运行测试或构建。
+- 用户已确认运行路由专项测试；若通过则完成 Mdocs/Git 校验，并排除本地未跟踪的 mdocs/routing.json 后直接提交本次输入契约与大写 binding 支持改动。
+- 路由专项测试已通过：`npx jest src/__tests__/routing.test.ts src/__tests__/routing-plugin.test.ts src/__tests__/plugin.test.ts --runInBand`，3 个测试套件、104 项测试全部通过。mdocs_validate、INDEX consistency 和 git diff --check 均通过。提交范围仅包含严格 mdocs_route 输入契约、orchestrator/Wiki/测试同步及 Initiative 记录；本地未跟踪 mdocs/routing.json 不提交。
+- [2026-08-06T10:02:35.074Z] Marked done via mdocs command
 
 ## Artifacts
 - src/routing.ts
