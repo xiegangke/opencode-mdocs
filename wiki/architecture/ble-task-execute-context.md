@@ -3,13 +3,10 @@ id: "ble-task-execute-context"
 title: "BLE 协议栈执行的任务上下文约束"
 category: "architecture"
 created: "2026-08-04"
-updated: "2026-08-04"
+updated: "2026-08-06"
 related_initiatives: ["simplify-ls-ble-task-execute"]
 tags: ["ble","remote","task-context"]
----
-
----
-lifecycle: stable
+lifecycle: "stable"
 ---
 
 ## 结论
