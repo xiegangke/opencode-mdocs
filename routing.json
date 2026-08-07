@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "defaultLevel": "standard",
+  "levels": {
+    "simple": [
+      "GPT-5-6-Luna"
+    ],
+    "standard": [
+      "GPT-5-6-Terra"
+    ],
+    "complex": [
+      "GPT-5-6-Sol"
+    ]
+  },
+  "bindings": {
+    "MiniMax-M3": {
+      "model": "listenai/MiniMax-M3"
+    },
+    "DeepSeek-V4-Pro": {
+      "model": "listenai/deepseek-v4-pro"
+    },
+    "Doubao-Seed-V2-Pro": {
+      "model": "listenai/doubao-seed-2.0-pro"
+    },
+    "GPT-5-6-Terra": {
+      "model": "listenai/gpt-5.6-terra"
+    },
+    "GLM-5-2-High": {
+      "model": "listenai/glm-5.2",
+      "variant": "high"
+    },
+    "Grok-4-5": {
+      "model": "listenai/grok-4.5"
+    },
+    "Kimi-K3": {
+      "model": "listenai/kimi-k3"
+    },
+    "GPT-5-6-Sol": {
+      "model": "listenai/gpt-5.6-sol"
+    },
+    "GLM-5-2-Max": {
+      "model": "listenai/glm-5.2",
+      "variant": "max"
+    },
+    "DeepSeek-V4-Flash": {
+      "model": "listenai/deepseek-v4-flash"
+    },
+    "GPT-5-5": {
+      "model": "listenai/gpt-5.5"
+    },
+    "GPT-5-6-Luna": {
+      "model": "listenai/gpt-5.6-luna"
+    },
+    "MiniMax-M2": {
+      "model": "listenai/MiniMax-M2"
+    }
+  }
+}
