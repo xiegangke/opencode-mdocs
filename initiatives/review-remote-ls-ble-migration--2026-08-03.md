@@ -1,14 +1,14 @@
 ---
 id: "review-remote-ls-ble-migration"
 title: "审查 remote 工程迁移至 ls_ble 接口"
-status: "active"
+status: "done"
 created: "2026-08-03"
 updated: "2026-08-07"
 owner: "AI"
 tags: ["code-review","remote","ls_ble","migration"]
-related_wiki: ["reviews/remote-ls-ble-migration-review","reviews/task-btle-feasibility-review","reviews/bt-if-phased-migration-plan","reviews/task-btle-merged-implementation","reviews/ls-ble-error-interface","reviews/bt-common-header-removal","reviews/bt-callback-merge-feasibility","reviews/bt-callback-merge-implementation","reviews/bt-callback-handler-consolidation"]
+related_wiki: ["reviews/remote-ls-ble-migration-review","reviews/task-btle-feasibility-review","reviews/bt-if-phased-migration-plan","reviews/task-btle-merged-implementation","reviews/ls-ble-error-interface","reviews/bt-common-header-removal","reviews/bt-callback-merge-feasibility","reviews/bt-callback-merge-implementation","reviews/bt-callback-handler-consolidation","reviews/ls-ble-comment-documentation-review"]
 priority: "medium"
-phase: "verification"
+phase: "implementation"
 ---
 
 ## Objective
@@ -55,5 +55,9 @@ phase: "verification"
 - 用户确认 callback 与 handler 已位于同一文件，可进一步合并。本轮将消除纯转发层，保留协议栈要求的 callback 签名及确有参数转换/外部桥接职责的适配函数；不处理低功耗 TODO，构建与测试需另行确认。
 - 已完成 callback/handler 收敛：reset、GAP enable、连接/断开、参数更新、bond、info、广播/activity/event 及 HOGPD notify 的业务逻辑直接进入协议栈 callback；删除无意义 handler 层。保留 bond status 拆分、HOGPD token 适配、DISS/HID 外部桥接和低功耗 TODO。独立静态复核未发现问题，四表签名/字段、初始化顺序、唯一 executor/queue/dispatcher/transaction 与两处 ble_task_execute 均保持；git diff --check 通过。未构建、未测试。
 - 按用户确认执行 `./build.sh remote`。首次构建在 task_btle.c 的 bt_stack_gap_enable_cmp 中失败：callback 上移后 hid_report_map 仅有未定长前置声明，不能 sizeof。新增定义后可见的 hid_report_map_size() helper，并在 profile 初始化中使用，保持 callback 合并和 report map 长度语义。重新执行 `./build.sh remote` 成功，flash_boot 与 remote 均链接并生成镜像；remote apram0 49136/49152 bytes（99.97%），flash 499156/524288 bytes（95.21%）。git diff --check 通过；未运行测试。
+- 用户确认继续现有 initiative。本轮范围确定为仅为 projects/remote/remote/mods/ls_ble/ 增加中文注释；默认不编译、不执行测试，先进行静态检查。
+- 本轮完成 ls_ble 目录 9 个 C/H 文件的中文 Doxygen 注释审查与补充：所有文件增加 @file/@brief/模块职责说明；四个公开头文件的函数声明统一为完整 Doxygen，逐项记录参数方向、返回值、调用上下文、生命周期及条件编译 API；实现处删除重复接口说明，仅保留内存布局、所有权、异步完成、executor、opaque buffer 和 UNSUPPORTED 等独立实现约束。已对照 ble_gap.h、ble_gatt.h、ble_task.h 核对 GAP/GATT/task 语义，新增稳定知识条目 reviews/ls-ble-comment-documentation-review 并建立双向关联。静态验证：git diff --check 通过，9 个目标文件顶部描述齐全，.c 实现处未发现重复 @param/@return 接口注释；未编译、未执行测试，低功耗裸 ble_task_sleep/init 问题按既定范围未处理。
+- [2026-08-07T03:51:20.151Z] Marked done via mdocs command
+- 按用户要求删除 4 个 H 文件顶部的文件级 Doxygen 描述：ls_ble_dispatch.h、ls_ble_gap.h、ls_ble_gatt.h、ls_ble_task.h；保留头文件保护、公开类型及函数声明注释不变。静态检查 git diff --check 通过，未编译、未执行测试。
 
 ## Artifacts
